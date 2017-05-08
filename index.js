@@ -12,24 +12,24 @@ const twitter = new Twitter({
 	access_token_key: config.get('accessTokenKey'),
 	access_token_secret: config.get('accessTokenSecret')
 });
-let prevLastModified = '';
+let prevTitle = '';
 
 const loop = () => {
 	co(function* () {
-		const [lastModified, result] = yield cheerio.fetch(parent).then((result) => {
-			const { response: { headers }, $ } = result;
-			const lastModified = headers['last-modified'];
+		const [title, result] = yield cheerio.fetch(parent).then(({ $ }) => {
+			const $a = $('h3 > a');
+			const title = $a.html();
 
 			return [
-				lastModified,
-				(prevLastModified !== '' && lastModified !== prevLastModified) ? url.resolve(parent, $('h3 > a').attr('href')) : null
+				title,
+				(prevTitle !== '' && title !== prevTitle) ? url.resolve(parent, $a.attr('href')) : null
 			];
 		});
 
 		if (result) {
-			console.log('更新された', result);
+			console.log(title, result);
 			yield new Promise((resolve, reject) => {
-				twitter.post('direct_messages/new', { screen_name: target, text: result }, (err, tweets, res) => {
+				twitter.post('direct_messages/new', { screen_name: target, text: `${title}\n${result}` }, (err, tweets, res) => {
 					if (err) {
 						reject(err);
 					}
@@ -38,10 +38,10 @@ const loop = () => {
 				});
 			});
 		} else {
-			console.log(prevLastModified, lastModified, '更新されてない');
+			console.log('更新されてない');
 		}
 
-		return prevLastModified = lastModified;
+		prevTitle = title;
 	}).catch((err) => console.error(err)).then(() => {
 		setTimeout(loop, 300000);
 	});

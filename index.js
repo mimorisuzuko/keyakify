@@ -1,8 +1,9 @@
 const co = require('co');
-const cheerio = require('cheerio-httpcli');
+const request = require('request');
 const config = require('config');
 const url = require('url');
 const Twitter = require('twitter');
+const { JSDOM } = require('jsdom');
 
 const parent = config.get('parent');
 const target = config.get('target');
@@ -16,14 +17,20 @@ let prevTitle = '';
 
 const loop = () => {
 	co(function* () {
-		const [title, result] = yield cheerio.fetch(parent).then(({ $ }) => {
-			const $a = $('h3 > a');
-			const title = $a.html();
+		const [title, result] = yield new Promise((resolve, reject) => {
+			request(parent, (err, res, body) => {
+				if (err) {
+					reject(err);
+				}
 
-			return [
-				title,
-				(prevTitle !== '' && title !== prevTitle) ? url.resolve(parent, $a.attr('href')) : null
-			];
+				const $a = (new JSDOM(body)).window.document.querySelector('h3 a');
+				const title = $a.textContent.trim();
+
+				resolve([
+					title,
+					(prevTitle !== '' && title !== prevTitle) ? url.resolve(parent, $a.getAttribute('href')) : null
+				]);
+			});
 		});
 
 		if (result) {

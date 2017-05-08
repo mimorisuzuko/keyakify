@@ -11,9 +11,10 @@
   "license": "MIT",
   "dependencies": {
     "cheerio": "^0.22.0",
-    "cheerio-httpcli": "^0.6.11",
     "co": "^4.6.0",
     "config": "^1.26.1",
+    "jsdom": "^10.1.0",
+    "request": "^2.81.0",
     "twitter": "^1.7.0"
   }
 }

@@ -1,5 +1,7 @@
 # Keyakify
 
+![](ss.png)
+
 Keyakify notifies you the update of your favorite keyakizaka 46 member's blog via Twitter's DM.
 
 ## Setup

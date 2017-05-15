@@ -1,57 +1,50 @@
-const co = require('co');
 const request = require('request');
-const config = require('config');
-const url = require('url');
-const Twitter = require('twitter');
+const liburl = require('url');
 const { JSDOM } = require('jsdom');
+const { EventEmitter } = require('events');
 
-const parent = config.get('parent');
-const target = config.get('target');
-const twitter = new Twitter({
-	consumer_key: config.get('consumerKey'),
-	consumer_secret: config.get('consumerSecret'),
-	access_token_key: config.get('accessTokenKey'),
-	access_token_secret: config.get('accessTokenSecret')
-});
-let prevTitle = '';
+class Keyakify extends EventEmitter {
 
-const loop = () => {
-	co(function* () {
-		const [title, result] = yield new Promise((resolve, reject) => {
-			request(parent, (err, res, body) => {
-				if (err) {
-					reject(err);
-				}
+	/**
+	 * @param {string} targetURL
+	 */
+	constructor(targetURL) {
+		super();
 
-				const $a = (new JSDOM(body)).window.document.querySelector('h3 a');
-				const title = $a.textContent.trim();
+		this.watch = this.watch.bind(this);
+		this.prev = '';
+		this.targetURL = targetURL;
+		this.watch();
+	}
 
-				resolve([
-					title,
-					(prevTitle !== '' && title !== prevTitle) ? url.resolve(parent, $a.getAttribute('href')) : null
-				]);
-			});
-		});
-
-		if (result) {
-			console.log(title, result);
-			yield new Promise((resolve, reject) => {
-				twitter.post('direct_messages/new', { screen_name: target, text: `${title}\n${result}` }, (err, tweets, res) => {
+	watch() {
+		(async () => {
+			const { prev, targetURL } = this;
+			const [title, url] = await new Promise((resolve, reject) => {
+				request(targetURL, (err, res, body) => {
 					if (err) {
 						reject(err);
 					}
 
-					resolve(res);
+					const $a = (new JSDOM(body)).window.document.querySelector('h3 a');
+					const title = $a.textContent.trim();
+
+					resolve([
+						title,
+						(prev !== '' && title !== prev) ? liburl.resolve(parent, $a.getAttribute('href')) : null
+					]);
 				});
 			});
-		} else {
-			console.log('更新されてない');
-		}
 
-		prevTitle = title;
-	}).catch((err) => console.error(err)).then(() => {
-		setTimeout(loop, 300000);
-	});
-};
+			if (url) {
+				this.emit('update', { title, url });
+			}
 
-loop();
+			this.prev = title;
+		})().catch((err) => console.error(err)).then(() => {
+			setTimeout(this.watch, 300000);
+		});
+	}
+}
+
+module.exports = Keyakify;

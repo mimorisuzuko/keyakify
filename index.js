@@ -4,6 +4,8 @@ const _ = require('lodash');
 const { JSDOM } = require('jsdom');
 const { EventEmitter } = require('events');
 
+const INTERVAL = 1000 * 60 * 5;
+
 class Keyakify extends EventEmitter {
 
 	/**
@@ -55,7 +57,7 @@ class Keyakify extends EventEmitter {
 					return false;
 				});
 			}
-		})().catch((err) => console.error(err)).then(() => setTimeout(this.watch, 300000));
+		})().catch((err) => console.error(err)).then(() => setTimeout(this.watch, INTERVAL));
 	}
 }
 

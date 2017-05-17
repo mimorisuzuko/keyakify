@@ -1,6 +1,6 @@
 # Keyakify
 
-Keyakify watches the update of your favorite keyakizaka 46 member's blog.
+Keyakify watches the update of your favorite keyakizaka 46 member.
 
 ## Usage
 

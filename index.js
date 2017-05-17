@@ -15,16 +15,19 @@ class Keyakify extends EventEmitter {
 		super();
 
 		this.watch = this.watch.bind(this);
-		this.prevBlog = null;
-		this.prevNews = null;
+		this.prevs = {
+			blog: null,
+			news: null,
+			schedule: null
+		};
 		this.targetURL = targetURL;
 		this.watch();
 	}
 
 	watch() {
 		(async () => {
-			const { prevBlog, prevNews, targetURL } = this;
-			const { blogs, news } = await new Promise((resolve, reject) => {
+			const { prevs, targetURL } = this;
+			const rets = await new Promise((resolve, reject) => {
 				request(targetURL, (err, res, body) => {
 					if (err) {
 						reject(err);
@@ -34,7 +37,7 @@ class Keyakify extends EventEmitter {
 					const { window: { document } } = (new JSDOM(body));
 
 					resolve({
-						blogs: _.map(document.querySelectorAll('.box-float .slider ul a'), ($a) => ({
+						blog: _.map(document.querySelectorAll('.box-float .slider ul a'), ($a) => ({
 							title: $a.querySelector('.ttl').textContent.trim(),
 							url: liburl.resolve(targetURL, $a.getAttribute('href'))
 						})),
@@ -43,46 +46,36 @@ class Keyakify extends EventEmitter {
 							date: new Date($li.querySelector('time').textContent.trim().replace(/\./g, '/')),
 							category: $li.querySelector('p.category').textContent.trim(),
 							content: $li.querySelector('p.ttl').textContent.trim()
+						})),
+						schedule: _.map(document.querySelectorAll('.memberSche li a'), ($a) => ({
+							url: liburl.resolve(targetURL, $a.getAttribute('href')),
+							category: $a.querySelector('p.category').textContent.trim(),
+							date: new Date($a.querySelector('time').textContent.trim().replace(/\./g, '/')),
+							content: $a.querySelector('p.ttl').textContent.trim()
 						}))
 					});
 				});
 			});
 
-			if (!prevBlog) {
-				this.prevBlog = blogs[0];
-			} else {
-				_.some(blogs, (blog, i) => {
-					if (i === 0) {
-						this.prevBlog = blog;
-					}
+			_.forEach(_.toPairs(prevs), ([key, prev]) => {
+				const ret = rets[key];
 
-					if (_.isEqual(prevBlog, blog)) {
-						return true;
-					}
+				if (!prev) {
+					this.prevs[key] = ret[0];
+				} else {
+					_.some(ret, (child, i) => {
+						if (i === 0) {
+							this.prevs[key] = child;
+						}
 
-					this.emit('update:blog', blog);
+						if (_.isEqual(prev, child)) {
+							return true;
+						}
 
-					return false;
-				});
-			}
-
-			if (!prevNews) {
-				this.prevNews = news[0];
-			} else {
-				_.some(news, (child, i) => {
-					if (i === 0) {
-						this.prevNews = child;
-					}
-
-					if (_.isEqual(prevNews, child)) {
-						return true;
-					}
-
-					this.emit('update:news', child);
-
-					return false;
-				});
-			}
+						this.emit(`update:${key}`, child);
+					});
+				}
+			});
 		})().catch((err) => console.error(err)).then(() => setTimeout(this.watch, INTERVAL));
 	}
 }

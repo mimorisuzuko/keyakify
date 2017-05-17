@@ -10,8 +10,29 @@ Create the instance.
 
 If there is a update, fire the following event
 
-### `keyakify.on('update:blog', {title: string, url: string})`
+### `keyakify.on('update:blog', (args) => {})`
 
-### `keyakify.on('update:news', {date: Date, url: string, content: string, category: string})`
+#### `args`
+
+* `url: string`
+* `title: string`
+
+### `keyakify.on('update:news', (args) => {})`
+
+#### `args`
+
+* `url: string`
+* `content: string`
+* `category: string`
+* `date: Date`
+
+### `keyakify.on('update:schedule', (args) => {})`
+
+#### `args`
+
+* `url: string`
+* `content: string`
+* `category: string`
+* `date: Date`
 
 Sample is [here](./sample).

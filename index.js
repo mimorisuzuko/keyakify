@@ -16,14 +16,15 @@ class Keyakify extends EventEmitter {
 
 		this.watch = this.watch.bind(this);
 		this.prevBlog = null;
+		this.prevNews = null;
 		this.targetURL = targetURL;
 		this.watch();
 	}
 
 	watch() {
 		(async () => {
-			const { prevBlog, targetURL } = this;
-			const blogs = await new Promise((resolve, reject) => {
+			const { prevBlog, prevNews, targetURL } = this;
+			const { blogs, news } = await new Promise((resolve, reject) => {
 				request(targetURL, (err, res, body) => {
 					if (err) {
 						reject(err);
@@ -31,12 +32,19 @@ class Keyakify extends EventEmitter {
 
 					/** @type {{window: {document: Document}}} */
 					const { window: { document } } = (new JSDOM(body));
-					resolve(
-						_.map(document.querySelectorAll('.box-float .slider ul a'), ($a) => ({
+
+					resolve({
+						blogs: _.map(document.querySelectorAll('.box-float .slider ul a'), ($a) => ({
 							title: $a.querySelector('.ttl').textContent.trim(),
 							url: liburl.resolve(targetURL, $a.getAttribute('href'))
+						})),
+						news: _.map(document.querySelectorAll('.memberNews li'), ($li) => ({
+							url: liburl.resolve(targetURL, $li.querySelector('a').getAttribute('href')),
+							date: new Date($li.querySelector('time').textContent.trim().replace(/\./g, '/')),
+							category: $li.querySelector('p.category').textContent.trim(),
+							content: $li.querySelector('p.ttl').textContent.trim()
 						}))
-					);
+					});
 				});
 			});
 
@@ -53,6 +61,24 @@ class Keyakify extends EventEmitter {
 					}
 
 					this.emit('update:blog', blog);
+
+					return false;
+				});
+			}
+
+			if (!prevNews) {
+				this.prevNews = news[0];
+			} else {
+				_.some(news, (child, i) => {
+					if (i === 0) {
+						this.prevNews = child;
+					}
+
+					if (_.isEqual(prevNews, child)) {
+						return true;
+					}
+
+					this.emit('update:news', child);
 
 					return false;
 				});

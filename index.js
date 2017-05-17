@@ -51,11 +51,11 @@ class Keyakify extends EventEmitter {
 					}
 
 					this.emit('update:blog', blog);
-					
+
 					return false;
 				});
 			}
-		})().catch((err) => console.error(err)).then(() => setTimeout(this.watch, 300000 / 300000));
+		})().catch((err) => console.error(err)).then(() => setTimeout(this.watch, 300000));
 	}
 }
 

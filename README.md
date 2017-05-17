@@ -8,7 +8,7 @@ Keyakify watches the update of your favorite keyakizaka 46 member's blog.
 
 Create the instance.
 
-### `keyakify.on('update', {title: string, url: string})`
+### `keyakify.on('update:blog', {title: string, url: string})`
 
 If there is the update, fire the event. `title` is the title and `url` is the url.
 

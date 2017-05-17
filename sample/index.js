@@ -8,10 +8,10 @@ const twitter = new Twitter({
 	access_token_key: config.get('twitter.accessTokenKey'),
 	access_token_secret: config.get('twitter.accessTokenSecret')
 });
-const keyakify = new Keyakify('http://www.keyakizaka46.com/s/k46o/diary/member/list?ima=0000&ct=28');
+const keyakify = new Keyakify('http://www.keyakizaka46.com/s/k46o/artist/28');
 const target = config.get('target');
 
-keyakify.on('update', ({ title, url }) => {
+keyakify.on('update:blog', ({ title, url }) => {
 	twitter.post('direct_messages/new', { screen_name: target, text: `${title}\n${url}` }, (err) => {
 		if (err) { return console.error(err); }
 

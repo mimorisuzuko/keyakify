@@ -1,5 +1,6 @@
 const request = require('request');
 const liburl = require('url');
+const _ = require('lodash');
 const { JSDOM } = require('jsdom');
 const { EventEmitter } = require('events');
 
@@ -12,38 +13,49 @@ class Keyakify extends EventEmitter {
 		super();
 
 		this.watch = this.watch.bind(this);
-		this.prev = '';
+		this.prevBlog = null;
 		this.targetURL = targetURL;
 		this.watch();
 	}
 
 	watch() {
 		(async () => {
-			const { prev, targetURL } = this;
-			const [title, url] = await new Promise((resolve, reject) => {
+			const { prevBlog, targetURL } = this;
+			const blogs = await new Promise((resolve, reject) => {
 				request(targetURL, (err, res, body) => {
 					if (err) {
 						reject(err);
 					}
 
-					const $a = (new JSDOM(body)).window.document.querySelector('h3 a');
-					const title = $a.textContent.trim();
-
-					resolve([
-						title,
-						(prev !== '' && title !== prev) ? liburl.resolve(parent, $a.getAttribute('href')) : null
-					]);
+					/** @type {{window: {document: Document}}} */
+					const { window: { document } } = (new JSDOM(body));
+					resolve(
+						_.map(document.querySelectorAll('.box-float .slider ul a'), ($a) => ({
+							title: $a.querySelector('.ttl').textContent.trim(),
+							url: liburl.resolve(targetURL, $a.getAttribute('href'))
+						}))
+					);
 				});
 			});
 
-			if (url) {
-				this.emit('update', { title, url });
-			}
+			if (!prevBlog) {
+				this.prevBlog = blogs[0];
+			} else {
+				_.some(blogs, (blog, i) => {
+					if (i === 0) {
+						this.prevBlog = blog;
+					}
 
-			this.prev = title;
-		})().catch((err) => console.error(err)).then(() => {
-			setTimeout(this.watch, 300000);
-		});
+					if (_.isEqual(prevBlog, blog)) {
+						return true;
+					}
+
+					this.emit('update:blog', blog);
+					
+					return false;
+				});
+			}
+		})().catch((err) => console.error(err)).then(() => setTimeout(this.watch, 300000 / 300000));
 	}
 }
 

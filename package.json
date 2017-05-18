@@ -10,7 +10,6 @@
   "author": "Hiroki Usuba <hrky0206@gmail.com> (http://mimorisuzuko.github.io/)",
   "license": "MIT",
   "dependencies": {
-    "cheerio": "^0.22.0",
     "jsdom": "^10.1.0",
     "lodash": "^4.17.4",
     "request": "^2.81.0"

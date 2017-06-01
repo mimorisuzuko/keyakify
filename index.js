@@ -18,7 +18,8 @@ class Keyakify extends EventEmitter {
 		this.prevs = {
 			blog: null,
 			news: null,
-			schedule: null
+			schedule: null,
+			message: null
 		};
 		this.targetURL = targetURL;
 		this.watch();
@@ -52,7 +53,8 @@ class Keyakify extends EventEmitter {
 							category: $a.querySelector('p.category').textContent.trim(),
 							date: new Date($a.querySelector('time').textContent.trim().replace(/\./g, '/')),
 							content: $a.querySelector('p.ttl').textContent.trim()
-						}))
+						})),
+						message: [{ url: document.querySelector('.box-msg img').getAttribute('src') }]
 					});
 				});
 			});

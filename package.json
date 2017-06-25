@@ -1,7 +1,7 @@
 {
-  "name": "keyakify",
+  "name": "zelkova",
   "version": "0.0.1",
-  "description": "",
+  "description": "Zelkova watches the update of your favorite keyakizaka 46 member",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

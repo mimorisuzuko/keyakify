@@ -6,7 +6,7 @@ const { EventEmitter } = require('events');
 
 const INTERVAL = 1000 * 60 * 5;
 
-class Keyakify extends EventEmitter {
+class Zelkova extends EventEmitter {
 
 	/**
 	 * @param {string} targetURL
@@ -82,4 +82,4 @@ class Keyakify extends EventEmitter {
 	}
 }
 
-module.exports = Keyakify;
+module.exports = Zelkova;

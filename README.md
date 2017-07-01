@@ -18,6 +18,7 @@ If there is a update, fire the following event
 
 * `url: string`
 * `title: string`
+* `thumbnail: string`
 
 ### `zelkova.on('update:news', (args) => {})`
 

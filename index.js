@@ -40,7 +40,8 @@ class Zelkova extends EventEmitter {
 					resolve({
 						blog: _.map(document.querySelectorAll('.box-float .slider ul a'), ($a) => ({
 							title: $a.querySelector('.ttl').textContent.trim(),
-							url: liburl.resolve(targetURL, $a.getAttribute('href'))
+							url: liburl.resolve(targetURL, $a.getAttribute('href')),
+							thumbnail: $a.querySelector('.img img').getAttribute('src')
 						})),
 						news: _.map(document.querySelectorAll('.memberNews li'), ($li) => ({
 							url: liburl.resolve(targetURL, $li.querySelector('a').getAttribute('href')),

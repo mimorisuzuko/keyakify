@@ -26,14 +26,15 @@ class Zelkova extends EventEmitter {
 	}
 
 	watch() {
+		let catchedBody = null;
+
 		(async () => {
 			const { prevs, targetURL } = this;
 			const rets = await new Promise((resolve, reject) => {
 				request(targetURL, (err, res, body) => {
-					if (err) {
-						reject(err);
-					}
+					if (err) { return reject(err); }
 
+					catchedBody = body;
 					/** @type {{window: {document: Document}}} */
 					const { window: { document } } = (new JSDOM(body));
 
@@ -79,7 +80,9 @@ class Zelkova extends EventEmitter {
 					});
 				}
 			});
-		})().catch((err) => console.error(err)).then(() => setTimeout(this.watch, INTERVAL));
+		})().catch((err) => {
+			this.emit('error', { error: err, body: catchedBody });
+		}).then(() => setTimeout(this.watch, INTERVAL));
 	}
 }
 

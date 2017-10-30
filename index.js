@@ -4,7 +4,7 @@ const _ = require('lodash');
 const { JSDOM } = require('jsdom');
 const { EventEmitter } = require('events');
 
-const INTERVAL = 1000 * 60 * 5;
+const INTERVAL = 1000 * 60 * 1;
 
 class Zelkova extends EventEmitter {
 
@@ -26,15 +26,15 @@ class Zelkova extends EventEmitter {
 	}
 
 	watch() {
-		let catchedBody = null;
-
 		(async () => {
 			const { prevs, targetURL } = this;
 			const rets = await new Promise((resolve, reject) => {
 				request(targetURL, (err, res, body) => {
 					if (err) { return reject(err); }
 
-					catchedBody = body;
+					const { statusCode } = res;
+					if (400 <= statusCode && statusCode < 600) { reject(`Status code: ${statusCode}`); }
+
 					/** @type {{window: {document: Document}}} */
 					const { window: { document } } = (new JSDOM(body));
 
@@ -81,7 +81,7 @@ class Zelkova extends EventEmitter {
 				}
 			});
 		})().catch((err) => {
-			this.emit('error', { error: err, body: catchedBody });
+			this.emit('error', { error: err });
 		}).then(() => setTimeout(this.watch, INTERVAL));
 	}
 }

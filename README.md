@@ -41,13 +41,3 @@ If there is a update, fire the following event
 * `content: string`
 * `category: string`
 * `date: Date`
-
-### `zelkova.on('update:message', (args) => {})`
-
-> 今月の直筆メッセージ
-
-#### `args`
-
-* `url: string`
-
-Sample is [here](./sample).

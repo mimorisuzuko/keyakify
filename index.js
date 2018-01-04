@@ -38,8 +38,7 @@ if (!fs.existsSync(STATE_PATH)) {
 		JSON.stringify({
 			blog: null,
 			news: null,
-			schedule: null,
-			message: null
+			schedule: null
 		}),
 		'utf-8'
 	);
@@ -95,8 +94,7 @@ class Zelkova extends EventEmitter {
 							category: $a.querySelector('p.category').textContent.trim(),
 							date: new Date($a.querySelector('time').textContent.trim().replace(/\./g, '/')),
 							content: $a.querySelector('p.ttl').textContent.trim()
-						})),
-						message: [{ url: document.querySelector('.box-msg img').getAttribute('src') }]
+						}))
 					});
 				});
 			});

@@ -6,6 +6,7 @@ const { EventEmitter } = require('events');
 const os = require('os');
 const libpath = require('path');
 const fs = require('fs-extra');
+const moment = require('moment');
 
 /**
  * @return {string}
@@ -55,6 +56,7 @@ class Zelkova extends EventEmitter {
 		this.watch = this.watch.bind(this);
 		this.state = fs.readJSONSync(STATE_PATH, 'utf-8');
 		this.targetURL = targetURL;
+		this.lastModified = moment();
 		this.watch();
 	}
 
@@ -66,14 +68,20 @@ class Zelkova extends EventEmitter {
 
 	watch() {
 		(async () => {
-			const { state, targetURL } = this;
+			const { state, targetURL, lastModified } = this;
 			const rets = await new Promise((resolve, reject) => {
 				request(targetURL, (err, res, body) => {
 					if (err) { return reject(err); }
 
-					const { statusCode } = res;
+					const { statusCode, headers } = res;
 					if (400 <= statusCode && statusCode < 600) { reject(`Status code: ${statusCode}`); }
+					const nextLastModified = moment(headers['last-modified']);
 
+					if (nextLastModified.diff(lastModified) < 0) {
+						return resolve(null);
+					}
+
+					this.lastModified = nextLastModified;
 					/** @type {{window: {document: Document}}} */
 					const { window: { document } } = (new JSDOM(body));
 
@@ -99,27 +107,29 @@ class Zelkova extends EventEmitter {
 				});
 			});
 
-			_.forEach(_.toPairs(state), ([key, value]) => {
-				const ret = rets[key];
+			if (rets) {
+				_.forEach(_.toPairs(state), ([key, value]) => {
+					const ret = rets[key];
 
-				if (!value) {
-					this.state[key] = ret[0];
-				} else {
-					_.some(ret, (child, i) => {
-						if (i === 0) {
-							this.state[key] = child;
-						}
+					if (!value) {
+						this.state[key] = ret[0];
+					} else {
+						_.some(ret, (child, i) => {
+							if (i === 0) {
+								this.state[key] = child;
+							}
 
-						if (_.isEqual(value, child)) {
-							return true;
-						}
+							if (_.isEqual(value, child)) {
+								return true;
+							}
 
-						this.emit(`update:${key}`, child);
-					});
-				}
-			});
+							this.emit(`update:${key}`, child);
+						});
+					}
+				});
 
-			await this.save();
+				await this.save();
+			}
 		})().catch((err) => {
 			this.emit('error', { error: err });
 		}).then(() => setTimeout(this.watch, INTERVAL));

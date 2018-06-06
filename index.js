@@ -37,9 +37,12 @@ if (!fs.existsSync(STATE_PATH)) {
 	fs.writeFileSync(
 		STATE_PATH,
 		JSON.stringify({
-			blog: null,
-			news: null,
-			schedule: null
+			lastModified: new Date(),
+			state: {
+				blog: null,
+				news: null,
+				schedule: null
+			}
 		}),
 		'utf-8'
 	);
@@ -53,17 +56,19 @@ class Zelkova extends EventEmitter {
 	constructor(targetURL) {
 		super();
 
+		const { lastModified, state } = fs.readJSONSync(STATE_PATH, 'utf-8');;
+
 		this.watch = this.watch.bind(this);
-		this.state = fs.readJSONSync(STATE_PATH, 'utf-8');
+		this.state = state;
 		this.targetURL = targetURL;
-		this.lastModified = moment();
+		this.lastModified = moment(lastModified);
 		this.watch();
 	}
 
 	async save() {
-		const { state } = this;
+		const { state, lastModified } = this;
 
-		return fs.writeFile(STATE_PATH, JSON.stringify(state), 'utf-8');
+		return fs.writeFile(STATE_PATH, JSON.stringify({ lastModified, state }), 'utf-8');
 	}
 
 	watch() {

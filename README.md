@@ -1,6 +1,6 @@
 # Zelkova
 
-**Zelkova** watches the update of your favorite keyakizaka 46 member.
+Zelkova watches the update of your favorite keyakizaka 46 member.
 
 ## Usage
 
